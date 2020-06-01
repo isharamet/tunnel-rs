@@ -108,7 +108,7 @@ impl World {
         let tw = texture_width as f64;
         let th = texture_height as f64;
 
-        let ratio = 32.0;
+        let ratio = 64.0;
         for y in 0..HEIGHT {
             for x in 0..WIDTH {
 
@@ -141,9 +141,8 @@ impl World {
     ///
     /// Assumes the default texture format: [`wgpu::TextureFormat::Rgba8UnormSrgb`]
     fn draw(&self, frame: &mut [u8]) {
-        println!("{}", self.animation);
-        let shift_x = (self.texture_width as f64 * self.animation * 1.0) as u64;
-        let shift_y = (self.texture_height as f64 * self.animation * 0.25) as u64;
+        let shift_x = (self.texture_width as f64 * self.animation * 0.5) as u64;
+        let shift_y = (self.texture_height as f64 * self.animation * 0.1) as u64;
         for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
             let x = i % WIDTH as usize;
             let y = i / WIDTH as usize;
