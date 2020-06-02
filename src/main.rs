@@ -9,10 +9,9 @@ use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
-use winit::window::CursorIcon::Help;
 
-const WIDTH: u32 = 640;
-const HEIGHT: u32 = 480;
+const WIDTH: u32 = 800;
+const HEIGHT: u32 = 600;
 
 /// Representation of the application state. In this example, a box will bounce around the screen.
 struct World {
@@ -49,10 +48,7 @@ fn main() -> Result<(), Error> {
         // Draw the current frame
         if let Event::RedrawRequested(_) = event {
             world.draw(pixels.get_frame());
-            if pixels
-                .render()
-                .is_err()
-            {
+            if pixels.render().is_err() {
                 *control_flow = ControlFlow::Exit;
                 return;
             }
@@ -83,7 +79,6 @@ fn main() -> Result<(), Error> {
     });
 }
 
-
 fn generate_texture(width: usize, height: usize) -> Vec<Vec<u32>> {
     let mut texture = vec![vec![0u32; width]; height];
     for y in 0..height {
@@ -97,11 +92,11 @@ fn generate_texture(width: usize, height: usize) -> Vec<Vec<u32>> {
 impl World {
     /// Create a new `World` instance that can draw a moving box.
     fn new() -> Self {
-        let texture_width = 128u32;
-        let texture_height = 128u32;
+        let texture_width = 512u32;
+        let texture_height = 512u32;
 
-        let mut distances = vec![vec![0u32; WIDTH as usize]; HEIGHT as usize];
-        let mut angles = vec![vec![0u32; WIDTH as usize]; HEIGHT as usize];
+        let mut distances = vec![vec![0u32; (WIDTH * 2) as usize]; (HEIGHT * 2) as usize];
+        let mut angles = vec![vec![0u32; (WIDTH * 2) as usize]; (HEIGHT * 2) as usize];
 
         let w = WIDTH as f64;
         let h = HEIGHT as f64;
@@ -109,13 +104,12 @@ impl World {
         let th = texture_height as f64;
 
         let ratio = 64.0;
-        for y in 0..HEIGHT {
-            for x in 0..WIDTH {
-
+        for y in 0..HEIGHT * 2 {
+            for x in 0..WIDTH * 2 {
                 let xf = x as f64;
                 let yf = y as f64;
-                let distance = (ratio * th / ((xf - w / 2.0) * (xf - w / 2.0) + (yf - h / 2.0) * (yf - h / 2.0)).sqrt()) as u32 % texture_height;
-                let angle = (0.5 * tw * (yf - h / 2.0).atan2(xf - w / 2.0) / PI) as u32;
+                let distance = (ratio * th / ((xf - w) * (xf - w) + (yf - h) * (yf - h)).sqrt()) as u32 % texture_height;
+                let angle = (0.5 * tw * (yf - h).atan2(xf - w) / PI) as u32;
                 distances[y as usize][x as usize] = distance;
                 angles[y as usize][x as usize] = angle;
             }
@@ -131,10 +125,9 @@ impl World {
         }
     }
 
-
     /// Update the `World` internal state; bounce the box around the screen.
     fn update(&mut self) {
-        self.animation += 0.1;
+        self.animation += 0.02;
     }
 
     /// Draw the `World` state to the frame buffer.
@@ -143,21 +136,20 @@ impl World {
     fn draw(&self, frame: &mut [u8]) {
         let shift_x = (self.texture_width as f64 * self.animation * 0.5) as u64;
         let shift_y = (self.texture_height as f64 * self.animation * 0.1) as u64;
+
+        let shift_look_x = (WIDTH as i32 / 2 + ((WIDTH / 2) as f64 * self.animation.sin()) as i32) as usize;
+        let shift_look_y = (HEIGHT as i32 / 2 + ((HEIGHT / 2) as f64 * (self.animation * 2.0).sin()) as i32) as usize;
+
         for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
             let x = i % WIDTH as usize;
             let y = i / WIDTH as usize;
 
-            let tex_x = ((self.distances[y][x] as u64 + shift_x) as u32 % self.texture_width) as usize;
-            let tex_y = ((self.angles[y][x] as u64 + shift_y) as u32 % self.texture_height) as usize;
+            let tex_x = ((self.distances[y + shift_look_y][x + shift_look_x] as u64 + shift_x) as u32 % self.texture_width) as usize;
+            let tex_y = ((self.angles[y + shift_look_y][x + shift_look_x] as u64 + shift_y) as u32 % self.texture_height) as usize;
 
             let color = self.texture[tex_y][tex_x];
 
-            let rgba = [
-                0u8,
-                color as u8,
-                0u8,
-                0xFF
-            ];
+            let rgba = [0u8, color as u8, 0u8, 0xFF];
 
             pixel.copy_from_slice(&rgba);
         }
