@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 
 use std::f64::consts::PI;
+use std::time::SystemTime;
 
 use pixels::{wgpu::Surface, Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
@@ -89,6 +90,14 @@ fn generate_texture(width: usize, height: usize) -> Vec<Vec<u32>> {
     texture
 }
 
+fn now() -> f64 {
+    let now = SystemTime::now();
+    let duration = now
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .expect("Time went backwards!");
+    duration.as_secs_f64()
+}
+
 impl World {
     /// Create a new `World` instance that can draw a moving box.
     fn new() -> Self {
@@ -121,13 +130,13 @@ impl World {
             texture: generate_texture(texture_width as usize, texture_height as usize),
             distances,
             angles,
-            animation: 0.0,
+            animation: now(),
         }
     }
 
     /// Update the `World` internal state; bounce the box around the screen.
     fn update(&mut self) {
-        self.animation += 0.02;
+        self.animation = now();
     }
 
     /// Draw the `World` state to the frame buffer.
