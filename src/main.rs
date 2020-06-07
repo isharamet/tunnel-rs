@@ -14,7 +14,6 @@ use winit_input_helper::WinitInputHelper;
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
 
-/// Representation of the application state. In this example, a box will bounce around the screen.
 struct World {
     texture_width: u32,
     texture_height: u32,
@@ -46,7 +45,6 @@ fn main() -> Result<(), Error> {
     let mut world = World::new();
 
     event_loop.run(move |event, _, control_flow| {
-        // Draw the current frame
         if let Event::RedrawRequested(_) = event {
             world.draw(pixels.get_frame());
             if pixels.render().is_err() {
@@ -55,25 +53,20 @@ fn main() -> Result<(), Error> {
             }
         }
 
-        // Handle input events
         if input.update(event) {
-            // Close events
             if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
                 *control_flow = ControlFlow::Exit;
                 return;
             }
 
-            // Adjust high DPI factor
             if let Some(factor) = input.scale_factor_changed() {
                 hidpi_factor = factor;
             }
 
-            // Resize the window
             if let Some(size) = input.window_resized() {
                 pixels.resize(size.width, size.height);
             }
 
-            // Update internal state and request a redraw
             world.update();
             window.request_redraw();
         }
@@ -99,7 +92,6 @@ fn now() -> f64 {
 }
 
 impl World {
-    /// Create a new `World` instance that can draw a moving box.
     fn new() -> Self {
         let texture_width = 512u32;
         let texture_height = 512u32;
@@ -134,14 +126,10 @@ impl World {
         }
     }
 
-    /// Update the `World` internal state; bounce the box around the screen.
     fn update(&mut self) {
         self.animation = now();
     }
 
-    /// Draw the `World` state to the frame buffer.
-    ///
-    /// Assumes the default texture format: [`wgpu::TextureFormat::Rgba8UnormSrgb`]
     fn draw(&self, frame: &mut [u8]) {
         let shift_x = (self.texture_width as f64 * self.animation * 0.5) as u64;
         let shift_y = (self.texture_height as f64 * self.animation * 0.1) as u64;
